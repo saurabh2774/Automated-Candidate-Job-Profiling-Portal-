@@ -7,14 +7,6 @@ import { useRouter } from 'next/navigation'
 
 const HomePage = () => {
 
-  const {data: session} = useSession()
-  const router = useRouter()
-
-  useEffect(()=>{
-    if(!session){
-      router.push("/login")
-    }
-  },[router,session])
 
   return (
     <div className="min-h-screen">

@@ -23,7 +23,7 @@ const Login = () => {
     return (
         <div className="py-14 container mx-auto">
             <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500 mb-6 text-center">
-                Login / Signup to Find Your Dream Job
+                Login / Signup to Find Your Dream Career
             </h1>
 
             <div className="Social-login-Buttons">

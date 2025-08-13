@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useSession, signIn, signOut } from 'next-auth/react';
 
+
 const Navbar = () => {
   
   const {data: session} = useSession()

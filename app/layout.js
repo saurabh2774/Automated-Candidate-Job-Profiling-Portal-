@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SessionWrapper from "@/components/SessionWrapper";
+import AuthGuard from "@/components/AuthGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,12 +27,13 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionWrapper>
-          <Navbar />
-          <div className="min-h-[80vh] [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)]">
-
-            {children}
-          </div>
-          <Footer />
+          <AuthGuard>
+            <Navbar />
+            <div className="min-h-[80vh] [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)]">
+              {children}
+            </div>
+            <Footer />
+          </AuthGuard>
         </SessionWrapper>
       </body>
     </html>
