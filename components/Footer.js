@@ -39,25 +39,25 @@ const Footer = () => {
           {/* Links */}
           <div className="flex flex-col">
             <h3 className="font-medium text-white mb-3">Quick Links</h3>
-            <Link href="/companies" className="text-gray-400 hover:text-[#63e] transition-colors py-1">
+            <span  className="text-gray-400 hover:text-[#63e] transition-colors py-1">
               Companies
-            </Link>
-            <Link href="/apply-auto" className="text-gray-400 hover:text-[#63e] transition-colors py-1">
+            </span>
+            <span className="text-gray-400 hover:text-[#63e] transition-colors py-1">
               Apply Auto
-            </Link>
-            <Link href="/about" className="text-gray-400 hover:text-[#63e] transition-colors py-1">
+            </span>
+            <span  className="text-gray-400 hover:text-[#63e] transition-colors py-1">
               About Us
-            </Link>
-            <Link href="#" className="text-gray-400 hover:text-[#63e] transition-colors py-1">
+            </span>
+            <span  className="text-gray-400 hover:text-[#63e] transition-colors py-1">
               Privacy Policy
-            </Link>
+            </span>
           </div>
           
           {/* Contact */}
           <div className="flex flex-col">
             <h3 className="font-medium text-white mb-3">Contact Us</h3>
             <p className="text-gray-400 mb-1">info@jobhunter.com</p>
-            <p className="text-gray-400">+1 (555) 123-4567</p>
+            <p className="text-gray-400">+91 (968) 123-4567</p>
             <div className="mt-4">
               <p className="text-xs text-gray-500">
                 © {new Date().getFullYear()} JOB HUNTER. All rights reserved.
