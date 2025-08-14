@@ -99,10 +99,16 @@ export async function POST(req) {
                                         }
                                     ]
                                 });
-                                await db.collection("matchedApplications").updateOne(
-                                    { _id: matchData.insertedId },
-                                    { $set: { status: 'sent' } }
-                                );
+                                await Promise.all([
+                                    db.collection("matchedApplications").updateOne(
+                                        { _id: matchData._id },
+                                        { $set: { status: 'sent' } }
+                                    ),
+                                    db.collection("applications").updateOne(
+                                        { _id: result.insertedId },
+                                        { $set: { status: 'sent' } }
+                                    )
+                                ]);
                             } catch (err) {
                                 console.error(`Error sending email for ${application.fullName}:`, err);
                             }
