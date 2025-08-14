@@ -3,7 +3,6 @@ import { GridFSBucket } from "mongodb";
 import nodemailer from "nodemailer";
 import { NextResponse } from 'next/server';
 
-
 // Helper function to convert stream to buffer
 async function streamToBuffer(stream) {
     const chunks = [];
@@ -19,7 +18,6 @@ export async function POST(req) {
         const client = await clientPromise;
         const db = client.db("resumePortal");
 
-        // Parse the form data
         const application = {
             fullName: formData.get('fullName'),
             email: formData.get('email'),
@@ -29,7 +27,6 @@ export async function POST(req) {
             autoApply: formData.get('autoApply') === 'true',
         };
 
-        // Store resume file in GridFS
         const resumeFile = formData.get('resume');
         const bucket = new GridFSBucket(db, { bucketName: 'resumes' });
         const uploadStream = bucket.openUploadStream(resumeFile.name);
@@ -41,142 +38,94 @@ export async function POST(req) {
             });
         });
         
-        // Add resume file reference to application
         application.resumeId = uploadStream.id;
 
-        // Store application in database
         const result = await db.collection("applications").insertOne(application);
 
-        const applications = await db.collection("applications").find({ autoApply: true }).toArray();
-        const companies = await db.collection("companyData").find().toArray();
+        if (application.autoApply) {
+            const companies = await db.collection("companyData").find().toArray();
 
-        const transporter = nodemailer.createTransport({
-            service: "Gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
+            const transporter = nodemailer.createTransport({
+                service: "Gmail",
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
 
-        const matchedResults = [];
-        const matchPromises = [];
+            for (const company of companies) {
+                const matchedSkills = application.skills.filter(skill =>
+                    company.skills.includes(skill)
+                );
 
-        // Only process the current application instead of all applications
-        for (const company of companies) {
-            const matchedSkills = application.skills.filter(skill =>
-                company.skills.includes(skill)
-            );
+                const experienceMatch = application.experienceLevel.toLowerCase() === company.experienceLevel.toLowerCase();
 
-            const experienceMatch = application.experienceLevel.toLowerCase() === company.experienceLevel.toLowerCase();
-
-            if (matchedSkills.length > 0 && experienceMatch) {
-                // Check if this resume was already sent to this company
-                const existingMatch = await db.collection("matchedApplications").findOne({
-                    applicationId: result.insertedId,  // Use current application ID
-                    companyId: company._id,
-                });
-
-                if (!existingMatch) {
-                    const matchData = {
-                        applicationId: result.insertedId,  // Use current application ID
+                if (matchedSkills.length > 0 && experienceMatch) {
+                    const existingMatch = await db.collection("matchedApplications").findOne({
+                        applicationId: result.insertedId,
                         companyId: company._id,
-                        fullName: application.fullName,
-                        companyName: company.name,
-                        jobTitle: company.jobTitle,
-                        matchedSkills,
-                        sentAt: new Date(),
-                        status: 'pending'
-                    };
-
-                    matchPromises.push(
-                        db.collection("matchedApplications").insertOne(matchData)
-                    );
-
-                    matchedResults.push({
-                        applicantName: application.fullName,
-                        companyName: company.name,
-                        matchedSkills,
-                        companyEmail: company.email,
-                        companyId: company._id
                     });
-                }
-            }
-        }
 
-        // Wait for all new matches to be stored
-        if (matchPromises.length > 0) {
-            await Promise.all(matchPromises);
-        }
+                    if (!existingMatch) {
+                        const matchData = {
+                            applicationId: result.insertedId,
+                            companyId: company._id,
+                            fullName: application.fullName,
+                            companyName: company.name,
+                            jobTitle: company.jobTitle,
+                            matchedSkills,
+                            sentAt: new Date(),
+                            status: 'pending'
+                        };
 
-        // Now proceed with email sending
-        for (const match of matchedResults) {
-            const resumeFile = await db.collection('resumes.files').findOne({ _id: application.resumeId });
-            if (resumeFile) {
-                try {
-                    const downloadStream = bucket.openDownloadStream(application.resumeId);
-                    const buffer = await streamToBuffer(downloadStream);
+                        await db.collection("matchedApplications").insertOne(matchData);
 
-                    await transporter.sendMail({
-                        from: '"Job Portal" dhulerohit970@gmail.com',
-                        to: match.companyEmail,
-                        subject: `Resume Submission for ${match.companyName}`,
-                        text: `Dear Hiring Manager at ${match.companyName},
+                        const resumeFileFromDB = await db.collection('resumes.files').findOne({ _id: application.resumeId });
+                        if (resumeFileFromDB) {
+                            try {
+                                const downloadStream = bucket.openDownloadStream(application.resumeId);
+                                const resumeBuffer = await streamToBuffer(downloadStream);
 
-I hope this message finds you well. I am writing to express my interest in a role at your esteemed organization. Please find my resume attached for your consideration.
-
-My skills (${match.matchedSkills.join(', ')}) align well with your requirements. I would be grateful for the opportunity to discuss my application further.
-
-Looking forward to hearing from you soon.
-
-Best regards,
-${application.fullName}`,
-                        attachments: [
-                            {
-                                filename: `${application.fullName}_Resume.pdf`,
-                                content: buffer
+                                await transporter.sendMail({
+                                    from: `"Job Portal" <${process.env.EMAIL_USER}>`,
+                                    to: company.email,
+                                    subject: `New Application for ${company.jobTitle} from ${application.fullName}`,
+                                    text: `A new candidate has applied for the ${company.jobTitle} position.\n\nCandidate: ${application.fullName}\nMatched Skills: ${matchedSkills.join(', ')}\n\nTheir resume is attached.`,
+                                    attachments: [
+                                        {
+                                            filename: `${application.fullName}_Resume.pdf`,
+                                            content: resumeBuffer,
+                                            contentType: 'application/pdf'
+                                        }
+                                    ]
+                                });
+                                await db.collection("matchedApplications").updateOne(
+                                    { _id: matchData.insertedId },
+                                    { $set: { status: 'sent' } }
+                                );
+                            } catch (err) {
+                                console.error(`Error sending email for ${application.fullName}:`, err);
                             }
-                        ]
-                    });
-
-                    // Update match status after email is sent
-                    await db.collection("matchedApplications").updateOne(
-                        { 
-                            applicationId: application._id,
-                            companyId: match.companyId 
-                        },
-                        { 
-                            $set: { status: 'sent' } 
                         }
-                    );
-
-                    console.log(`Resume sent to ${match.companyName} for ${application.fullName}`);
-                } catch (err) {
-                    console.error(`Error processing resume for ${application.fullName}:`, err);
+                    }
                 }
             }
         }
 
-        return new Response(JSON.stringify({
+        const matchesCount = await db.collection("matchedApplications").countDocuments({ applicationId: result.insertedId });
+
+        return NextResponse.json({
             success: true,
             message: "Application submitted successfully",
-            matches: matchedResults.length // Return matches count directly
-        }), {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+            matches: matchesCount
+        }, { status: 200 });
 
     } catch (error) {
         console.error("Error:", error);
-        return new Response(JSON.stringify({
+        return NextResponse.json({
             success: false,
             message: error.message || "An error occurred",
-        }), {
-            status: 500,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+            error: error
+        }, { status: 500 });
     }
 }
