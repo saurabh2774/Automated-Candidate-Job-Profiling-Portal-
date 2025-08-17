@@ -123,7 +123,7 @@ const Navbar = () => {
               <button
                 
                 className="px-4 py-3 text-lg bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors mx-3"
-                onClick={() => {signOut}}
+                onClick={() => signOut()}
               >
                 Sign Out
               </button></div>}
