@@ -54,7 +54,7 @@ const Navbar = () => {
           {/* Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-4">
             {session && <div className='flex items-center'> 
-              <img src={session.user.image} alt="Profile" className="w-8 h-8 rounded-full mr-2" />
+              <Image src={session.user.image} alt="Profile" width={32} height={32} className="w-8 h-8 rounded-full mr-2" />
               <button  className="px-4 py-2 text-lg  text-white rounded hover:bg-slate-900 transition-colors" >
               {session.user.email}
             </button></div>}
@@ -119,7 +119,7 @@ const Navbar = () => {
             
             <div className="pt-4 pb-2 border-t border-gray-800 flex flex-col space-y-2">
               {session && <div className='flex items-center'>
-                <img src={session.user.image} alt="Profile" className="w-8 h-8 rounded-full mr-2" />
+                <Image src={session.user.image} alt="Profile" width={32} height={32} className="w-8 h-8 rounded-full mr-2" />
               <button
                 
                 className="px-4 py-3 text-lg bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors mx-3"

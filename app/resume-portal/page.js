@@ -294,7 +294,7 @@ export default function ResumePortal() {
                 </label>
               </div>
               <p className="text-gray-800 text-sm mt-2 ml-8">
-                We'll automatically submit your resume to jobs matching your profile.
+                We&apos;ll automatically submit your resume to jobs matching your profile.
               </p>
             </div>
 

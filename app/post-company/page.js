@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react'
 
-const post_company = () => {
+const PostCompany = () => {
     
     const [formData, setFormData] = useState({
         companyName: '',
@@ -179,4 +179,4 @@ const post_company = () => {
     )
 }
 
-export default post_company
+export default PostCompany
