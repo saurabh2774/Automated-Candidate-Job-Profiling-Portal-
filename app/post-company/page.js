@@ -36,7 +36,7 @@ const PostCompany = () => {
                     jobTitle: formData.jobTitle,
                     location: formData.location,
                     skills: skillsArray,
-                    experienceLevel: formData.experienceLevel,
+                    experienceLevel: formData.experienceLevel, // Make sure this matches your MongoDB schema
                     email: formData.email
                 }),
             });
@@ -53,7 +53,8 @@ const PostCompany = () => {
                     email: ''
                 });
             } else {
-                alert('Error posting job');
+                const error = await response.json();
+                alert(`Error posting job: ${error.message}`);
             }
         } catch (error) {
             console.error('Error:', error);
