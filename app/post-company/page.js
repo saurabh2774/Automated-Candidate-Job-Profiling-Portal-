@@ -145,6 +145,7 @@ const PostCompany = () => {
                                 required
                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all text-gray-900"
                             >
+                                <option >Select Experience Level</option>
                                 <option value="entry">Entry Level</option>
                                 <option value="mid">Mid Level</option>
                                 <option value="senior">Senior Level</option>
