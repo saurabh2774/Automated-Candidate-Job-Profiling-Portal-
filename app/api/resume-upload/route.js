@@ -55,7 +55,9 @@ export async function POST(req) {
 
             for (const company of companies) {
                 const matchedSkills = application.skills.filter(skill =>
-                    company.skills.includes(skill)
+                    company.skills.some(companySkill => 
+                        companySkill.toLowerCase() === skill.toLowerCase()
+                    )
                 );
 
                 const experienceMatch = application.experienceLevel.toLowerCase() === company.experienceLevel.toLowerCase();
