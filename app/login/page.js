@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect } from 'react'; // Import useEffect
-import { useSession, signIn, signOut } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 const Login = () => {
