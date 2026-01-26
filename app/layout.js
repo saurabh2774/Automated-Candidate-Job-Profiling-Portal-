@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
         <SessionWrapper>
           <AuthGuard>
             <Navbar />
-            <div className="min-h-[80vh] [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)]">
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
               {children}
             </div>
             <Footer />

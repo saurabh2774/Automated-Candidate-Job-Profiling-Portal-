@@ -77,7 +77,7 @@ export default function ResumePortal() {
     }
   };
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError("");
@@ -107,11 +107,28 @@ export default function ResumePortal() {
             body: formDataToSend,
         });
 
+        
+        if (!response.ok) {
+            let errorMessage;
+            const contentType = response.headers.get("content-type");
+            
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const errorData = await response.json();
+                errorMessage = errorData.message || 'Failed to submit application';
+            } else {
+                // This will catch the "<!DOCTYPE..." error
+                const errorText = await response.text();
+                console.error("Server returned non-JSON error:", errorText);
+                errorMessage = `Server error: ${response.status} ${response.statusText}. Check console for details.`;
+            }
+            throw new Error(errorMessage);
+        }
+        
+
         const data = await response.json();
         
         if (data.success) {
             setSubmitSuccess(true);
-            // Update match notification based on matches count
             setMatchNotification({
                 show: true,
                 message: data.matches > 0 
@@ -128,11 +145,9 @@ export default function ResumePortal() {
                 autoApply: false,
                 resume: null,
             });
+            e.target.reset(); 
         } else {
-            // Check for duplicate application error
-            if (data.error && data.error.code === 11000) {
-                throw new Error("You have already applied for this position");
-            }
+            
             throw new Error(data.message || 'Failed to submit application');
         }
         
@@ -144,7 +159,6 @@ export default function ResumePortal() {
         
         setSubmitError(errorMessage);
         
-        // Show error in notification instead of success
         setMatchNotification({
             show: true,
             message: errorMessage,

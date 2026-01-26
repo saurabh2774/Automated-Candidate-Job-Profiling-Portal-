@@ -39,25 +39,26 @@ const Dashboard = () => {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-8">
         <div className="mb-12">
-        <h1 className="text-5xl font-extrabold mb-12  text-white tracking-tight">
-          Matched <span className="text-purple-300">Companies</span>
-        </h1>
+          <h1 className="text-5xl font-extrabold mb-4 text-white tracking-tight">
+            Matched <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Companies</span>
+          </h1>
           <p className="text-gray-400">Track your job applications and matches</p>
         </div>
-      
+
         {Object.entries(groupedMatches).map(([fullName, groupMatches]) => (
           <div key={fullName} className="mb-16">
-            <div className="mb-8">
-              <h2 className="text-4xl font-semibold text-center text-purple-900">
+            
+            <div className="mb-12 bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/20 rounded-xl p-6">
+              <h2 className="text-2xl font-semibold text-center text-gray-100">
                 {fullName}
               </h2>
             </div>
-            <div className="h-px bg-gray-700 mb-8"></div>
+            
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {groupMatches.map((match) => (
-                <div 
-                  key={match._id} 
+                <div
+                  key={match._id}
                   className="card bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-purple-500/20 
                     transition-all duration-300 hover:-translate-y-1 border border-gray-700"
                 >
@@ -67,8 +68,8 @@ const Dashboard = () => {
                   <p className="text-purple-400 text-lg mb-4 font-medium">{match.jobTitle}</p>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {match.matchedSkills.map((skill, index) => (
-                      <span 
-                        key={index} 
+                      <span
+                        key={index}
                         className="bg-purple-500/20 border border-purple-500/50 px-3 py-1 rounded-full 
                           text-sm text-purple-300 hover:bg-purple-500/30 transition-colors"
                       >

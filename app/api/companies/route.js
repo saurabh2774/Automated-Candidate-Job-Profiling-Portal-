@@ -5,7 +5,8 @@ export async function GET() {
     try {
         const client = await clientPromise;
         const db = client.db('resumePortal');
-        const companies = await db.collection('companyData').find({}).toArray();
+        const companies = await db.collection('companyData')
+        .find({}).toArray();
         
         // Transform data to match the expected format in CompanyCard
         const transformedCompanies = companies.map(company => ({
