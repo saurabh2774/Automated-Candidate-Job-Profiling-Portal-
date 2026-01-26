@@ -73,6 +73,7 @@ const HostedJobsPage = () => {
 
         {/* Jobs Grid - Grouped by Date */}
         {companies.length === 0 ? (
+          // FIXED: Changed "haven't" to "haven&apos;t" below
           <div className="text-gray-500 text-center py-20">You haven&apos;t posted any jobs yet.</div>
         ) : (
           sortedGroups.map(([dateKey, groupData]) => (
