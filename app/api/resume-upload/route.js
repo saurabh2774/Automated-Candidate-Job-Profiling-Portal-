@@ -1,5 +1,5 @@
 import clientPromise from "@/lib/mongodb";
-import { GridFSBucket } from "mongodb";
+import { GridFSBucket, ObjectId } from "mongodb";
 import nodemailer from "nodemailer";
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
@@ -7,15 +7,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // This is the URL for your Python AI Service
 const AI_SERVICE_URL = "http://localhost:8000";
-
-// Helper function to convert stream to buffer
-async function streamToBuffer(stream) {
-    const chunks = [];
-    for await (const chunk of stream) {
-        chunks.push(chunk);
-    }
-    return Buffer.concat(chunks);
-}
 
 export async function POST(req) {
     try {
@@ -28,17 +19,21 @@ export async function POST(req) {
         const client = await clientPromise;
         const db = client.db("resumePortal");
 
+        // 1. Check for specific target company
+        const targetCompanyId = formData.get('targetCompanyId');
+
         const application = {
-            
             fullName: formData.get('fullName'),
             email: formData.get('email'),
             desiredJobTitle: formData.get('desiredJobTitle'),
             skills: formData.get('skills').split(',').map(skill => skill.trim()),
             experienceLevel: formData.get('experienceLevel'),
             autoApply: formData.get('autoApply') === 'true',
-            User_id: session.user.email
+            User_id: session.user.email,
+            targetCompanyId: targetCompanyId || null // Track direct vs auto
         };
 
+        // Resume Upload Logic
         const resumeFile = formData.get('resume');
         const bucket = new GridFSBucket(db, { bucketName: 'resumes' });
         const uploadStream = bucket.openUploadStream(resumeFile.name);
@@ -53,15 +48,16 @@ export async function POST(req) {
             uploadStream.end(buffer);
         });
         
-        const result = await db.collection("applications")
-        .insertOne(application);
+        const result = await db.collection("applications").insertOne(application);
         const newResumeGridFSId = application.resumeId.toString();
         
         let matchesCount = 0;
 
-        if (application.autoApply) {
+        // MATCHING LOGIC
+        // Only run if AutoApply is ON OR if there is a specific Target Company
+        if (application.autoApply || targetCompanyId) {
             
-            // 1. Tell the AI service to parse the new resume
+            // 1. Parse Resume
             try {
                 const parseResponse = await fetch(`${AI_SERVICE_URL}/parse`, {
                     method: 'POST',
@@ -70,16 +66,40 @@ export async function POST(req) {
                 });
 
                 if (!parseResponse.ok) {
-                    const errorText = await parseResponse.text();
-                    console.error("AI Parse Service failed:", errorText);
-                    throw new Error(`AI service failed to parse resume: ${errorText}`);
+                    throw new Error(`AI service failed to parse resume: ${await parseResponse.text()}`);
                 }
             } catch (e) {
                 console.error("Failed to call AI parse service:", e.message);
-                throw new Error(`AI service connection failed or parse error: ${e.message}`);
+                // Proceeding without parsing might break scoring, but we can catch that later
             }
 
-            const companies = await db.collection("companyData").find().toArray();
+            // 2. Determine Scope (Single Company vs All Companies)
+            let companies = [];
+            if (targetCompanyId) {
+                // CASE A: Direct Application - Fetch ONLY the specific company
+                const specificCompany = await db.collection("companyData").findOne({ _id: new ObjectId(targetCompanyId) });
+                if (specificCompany) {
+                    companies = [specificCompany];
+                }
+            } else {
+                // CASE B: Auto Apply - Fetch ALL companies BUT exclude previously applied ones
+                
+                // a. Fetch all available companies
+                const allCompanies = await db.collection("companyData").find().toArray();
+
+                // b. Fetch all applications this user has already made
+                const userPastApplications = await db.collection("matchedApplications")
+                    .find({ User_id: session.user.email })
+                    .project({ companyId: 1 }) // Only need the IDs
+                    .toArray();
+
+                // c. Create a Set of applied Company IDs for fast lookup
+                const appliedCompanyIds = new Set(userPastApplications.map(app => app.companyId.toString()));
+
+                // d. Filter companies: Keep only those NOT in the applied list
+                companies = allCompanies.filter(company => !appliedCompanyIds.has(company._id.toString()));
+            }
+
             const transporter = nodemailer.createTransport({
                 service: "Gmail",
                 auth: {
@@ -90,33 +110,27 @@ export async function POST(req) {
             
             const resumeBufferForEmail = Buffer.from(await resumeFile.arrayBuffer());
 
+            // 3. Process Companies
             for (const company of companies) {
-                const matchedSkills = application.skills.filter(skill =>
-                    company.skills.includes(skill)
-                );
-
-                // 1. Check Experience Level
-                const experienceMatch = application.experienceLevel.toLowerCase() === company.experienceLevel.toLowerCase();
-
-                // 2. Check Job Title
-                // Clean both strings (lowercase and remove extra spaces) to prevent mismatches
-                const appTitle = application.desiredJobTitle.toLowerCase().trim();
-                const companyTitle = company.jobTitle.toLowerCase().trim();
-                const titleMatch = (appTitle === companyTitle); 
-
-                // 3. Check Skills Match
-                const skillsMatch = matchedSkills.length > 0;
-
-                // 4. If any one doesn't match, skip this company
-                if (!experienceMatch || !titleMatch || !skillsMatch) {
-                    console.log(`Skipping match for ${company.name}: Exp? ${experienceMatch}, Title? ${titleMatch}, Skills? ${skillsMatch}`);
-                    continue; // Go to the next company
-                }
-
-                // This code below will now *only* run if both experience and title match
                 
+                // --- FILTER LOGIC ---
+                // If it is NOT a direct application (i.e. it is Auto Apply), enforce strict filters
+                if (!targetCompanyId) {
+                    // Check Experience
+                    const experienceMatch = application.experienceLevel.toLowerCase() === company.experienceLevel.toLowerCase();
+                    // Check Job Title
+                    const appTitle = application.desiredJobTitle.toLowerCase().trim();
+                    const companyTitle = company.jobTitle.toLowerCase().trim();
+                    const titleMatch = (appTitle === companyTitle); 
+
+                    if (!experienceMatch || !titleMatch) {
+                        continue; // Skip this company
+                    }
+                }
+                // If it IS a direct application, we SKIP the filters above and proceed to scoring/emailing directly.
+
                 try {
-                    // 3. Tell the AI service to score
+                    // 4. AI Scoring
                     const scoreResponse = await fetch(`${AI_SERVICE_URL}/score`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -126,18 +140,21 @@ export async function POST(req) {
                         })
                     });
                     
-                    if (!scoreResponse.ok) {
-                        console.error(`Failed to score for company ${company._id}: ${await scoreResponse.text()}`);
-                        continue; 
-                    }
+                    if (!scoreResponse.ok) continue;
 
                     const scoreData = await scoreResponse.json();
                     const classification = scoreData.class;
                     const score = scoreData.score;
+                    const matchedSkills = application.skills; 
 
-                    // 4. Final check on AI score
-                    if (classification === 'MOS' || classification === 'MDS') {
+                    // 5. Save Match & Send Email
+                    // For Direct Apply: We accept regardless of score (or you can add a threshold)
+                    // For Auto Apply: We only accept 'MOS' or 'MDS'
+                    const isAutoMatch = (classification === 'MOS' || classification === 'MDS');
+                    
+                    if (targetCompanyId || isAutoMatch) {
 
+                        // Double check to ensure we don't insert duplicates for the current run
                         const existingMatch = await db.collection("matchedApplications").findOne({
                             applicationId: result.insertedId,
                             companyId: company._id,
@@ -155,7 +172,8 @@ export async function POST(req) {
                                 suitabilityScore: score,
                                 classification: classification,
                                 sentAt: new Date(),
-                                status: 'pending'
+                                status: 'sent',
+                                type: targetCompanyId ? 'direct' : 'auto'
                             };
 
                             await db.collection("matchedApplications").insertOne(matchData);
@@ -176,17 +194,6 @@ export async function POST(req) {
                                     contentType: 'application/pdf'
                                 }]
                             });
-                            
-                            await Promise.all([
-                                db.collection("matchedApplications").updateOne(
-                                    { _id: matchData._id },
-                                    { $set: { status: 'sent' } }
-                                ),
-                                db.collection("applications").updateOne(
-                                    { _id: result.insertedId },
-                                    { $set: { status: 'sent' } }
-                                )
-                            ]);
                         }
                     }
                 } catch (e) {
