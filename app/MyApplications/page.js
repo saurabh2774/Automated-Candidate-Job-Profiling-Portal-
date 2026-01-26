@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { FiCheckCircle, FiShare2, FiBell } from 'react-icons/fi';
 
 const MyApplicationsPage = () => {
