@@ -91,7 +91,9 @@ export async function POST(req) {
             const resumeBufferForEmail = Buffer.from(await resumeFile.arrayBuffer());
 
             for (const company of companies) {
-
+                const matchedSkills = application.skills.filter(skill =>
+                    company.skills.includes(skill)
+                );
 
                 // 1. Check Experience Level
                 const experienceMatch = application.experienceLevel.toLowerCase() === company.experienceLevel.toLowerCase();
@@ -102,9 +104,12 @@ export async function POST(req) {
                 const companyTitle = company.jobTitle.toLowerCase().trim();
                 const titleMatch = (appTitle === companyTitle); 
 
-                // 3. If either one doesn't match, skip this company
-                if (!experienceMatch || !titleMatch) {
-                    console.log(`Skipping match for ${company.name}: Exp? ${experienceMatch}, Title? ${titleMatch}`);
+                // 3. Check Skills Match
+                const skillsMatch = matchedSkills.length > 0;
+
+                // 4. If any one doesn't match, skip this company
+                if (!experienceMatch || !titleMatch || !skillsMatch) {
+                    console.log(`Skipping match for ${company.name}: Exp? ${experienceMatch}, Title? ${titleMatch}, Skills? ${skillsMatch}`);
                     continue; // Go to the next company
                 }
 
@@ -129,7 +134,6 @@ export async function POST(req) {
                     const scoreData = await scoreResponse.json();
                     const classification = scoreData.class;
                     const score = scoreData.score;
-                    const matchedSkills = application.skills; 
 
                     // 4. Final check on AI score
                     if (classification === 'MOS' || classification === 'MDS') {
