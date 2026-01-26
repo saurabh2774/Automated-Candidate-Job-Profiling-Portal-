@@ -2,17 +2,6 @@
 
 import { useState } from "react";
 
-// Add retry utility
-const retryRequest = async (fn, retries = 3, delay = 1000) => {
-  try {
-    return await fn();
-  } catch (error) {
-    if (retries <= 1) throw error;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return retryRequest(fn, retries - 1, delay * 2);
-  }
-};
-
 export default function ResumePortal() {
   const [formData, setFormData] = useState({
     fullName: "",
