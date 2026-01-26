@@ -4,7 +4,9 @@ import { ObjectId } from "mongodb";
 
 export async function GET(req, { params }) {
   try {
-    const { id } = params; // This is the companyId
+   
+    const { id } = await params; 
+    
     const client = await clientPromise;
     const db = client.db("resumePortal");
 
