@@ -4,7 +4,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
   try {
-    const { id } = params; // resumeId
+    
+    const { id } = await params; 
+   
+
     const client = await clientPromise;
     const db = client.db("resumePortal");
     const bucket = new GridFSBucket(db, { bucketName: 'resumes' });
@@ -19,7 +22,6 @@ export async function GET(req, { params }) {
     const file = files[0];
     const stream = bucket.openDownloadStream(_id);
 
-    // Create a response with the stream
     return new Response(stream, {
       headers: {
         "Content-Type": "application/pdf",
