@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+// Removed unused Image import
 import { FiBriefcase } from 'react-icons/fi';
 
 const HostedJobsPage = () => {
@@ -72,7 +73,7 @@ const HostedJobsPage = () => {
 
         {/* Jobs Grid - Grouped by Date */}
         {companies.length === 0 ? (
-          <div className="text-gray-500 text-center py-20">You haven't posted any jobs yet.</div>
+          <div className="text-gray-500 text-center py-20">You haven&apos;t posted any jobs yet.</div>
         ) : (
           sortedGroups.map(([dateKey, groupData]) => (
             <div key={dateKey} className="mb-16">
