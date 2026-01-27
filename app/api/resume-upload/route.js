@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // This is the URL for your Python AI Service
-const AI_SERVICE_URL = "https://job-hunt-ai-service.vercel.app/";
+const AI_SERVICE_URL = "jobhunt-ai-service-production.up.railway.app";
 
 export async function POST(req) {
     try {
