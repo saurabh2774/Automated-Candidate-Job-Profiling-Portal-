@@ -46,7 +46,7 @@ const HostedJobsPage = () => {
       // Group items without valid dates under "Unknown Date"
       const unknownKey = 'Unknown Date';
       if (!groups[unknownKey]) {
-        groups[unknownKey] = { date: new Date(0), companies: [] }; // Use epoch for sorting
+        groups[unknownKey] = { date: new Date(0), companies: [] }; 
       }
       groups[unknownKey].companies.push(company);
     }
@@ -72,7 +72,8 @@ const HostedJobsPage = () => {
 
         {/* Jobs Grid - Grouped by Date */}
         {companies.length === 0 ? (
-          <div className="text-gray-500 text-center py-20">You haven't posted any jobs yet.</div>
+          
+          <div className="text-gray-500 text-center py-20">{"You have not posted any jobs yet."}</div>
         ) : (
           sortedGroups.map(([dateKey, groupData]) => (
             <div key={dateKey} className="mb-16">
@@ -131,4 +132,4 @@ const HostedJobsPage = () => {
   );
 };
 
-export default HostedJobsPage;
+export default HostedJobsPage; 
