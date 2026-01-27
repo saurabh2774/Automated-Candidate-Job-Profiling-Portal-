@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function ResumePortal() {
+function ResumePortalContent() {
+  const searchParams = useSearchParams();
+  const targetCompanyId = searchParams.get('companyId');
+  const targetCompanyName = searchParams.get('companyName');
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     desiredJobTitle: "",
     skills: "",
     experienceLevel: "entry",
-    autoApply: false,
+    autoApply: !targetCompanyId, // Default to false if applying to specific company
     resume: null,
   });
 
@@ -17,6 +22,13 @@ export default function ResumePortal() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [matchNotification, setMatchNotification] = useState({ show: false, message: "" });
+
+  // Effect to handle direct application state
+  useEffect(() => {
+    if (targetCompanyId) {
+      setFormData(prev => ({ ...prev, autoApply: false }));
+    }
+  }, [targetCompanyId]);
 
   const validateFile = (file) => {
     // Check if file exists
@@ -91,12 +103,16 @@ export default function ResumePortal() {
             }
         });
 
+        // --- KEY ADDITION: Pass the target company ID if it exists ---
+        if (targetCompanyId) {
+            formDataToSend.append('targetCompanyId', targetCompanyId);
+        }
+
         const response = await fetch('/api/resume-upload', {
             method: 'POST',
             body: formDataToSend,
         });
 
-        
         if (!response.ok) {
             let errorMessage;
             const contentType = response.headers.get("content-type");
@@ -105,7 +121,6 @@ export default function ResumePortal() {
                 const errorData = await response.json();
                 errorMessage = errorData.message || 'Failed to submit application';
             } else {
-                // This will catch the "<!DOCTYPE..." error
                 const errorText = await response.text();
                 console.error("Server returned non-JSON error:", errorText);
                 errorMessage = `Server error: ${response.status} ${response.statusText}. Check console for details.`;
@@ -120,9 +135,9 @@ export default function ResumePortal() {
             setSubmitSuccess(true);
             setMatchNotification({
                 show: true,
-                message: data.matches > 0 
-                    ? `Match found: ${data.matches} matches found`
-                    : "Match not found"
+                message: targetCompanyId 
+                  ? `Application sent successfully to ${targetCompanyName || 'the company'}!`
+                  : (data.matches > 0 ? `Match found: ${data.matches} matches found` : "Match not found")
             });
             
             setFormData({
@@ -136,7 +151,6 @@ export default function ResumePortal() {
             });
             e.target.reset(); 
         } else {
-            
             throw new Error(data.message || 'Failed to submit application');
         }
         
@@ -161,7 +175,11 @@ export default function ResumePortal() {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 py-12 px-4">
       <div className="container mx-auto max-w-4xl">
         <h1 className="text-5xl font-extrabold mb-12 text-center text-white tracking-tight">
-          Resume <span className="text-purple-400">Portal</span>
+          {targetCompanyId ? (
+             <>Apply to <span className="text-purple-400">{targetCompanyName || 'Company'}</span></>
+          ) : (
+             <>Resume <span className="text-purple-400">Portal</span></>
+          )}
         </h1>
         
         {matchNotification.show && (
@@ -195,6 +213,50 @@ export default function ResumePortal() {
               </div>
             )}
             
+            <div>
+              <label htmlFor="resume" className="block text-gray-900 font-bold mb-2">
+                Resume (PDF) *
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  id="resume"
+                  name="resume"
+                  onChange={handleChange}
+                  accept=".pdf"
+                  required
+                  className="hidden"
+                />
+                <label
+                  htmlFor="resume"
+                  className="cursor-pointer flex items-center justify-center border-2 border-dashed border-purple-300 rounded-lg p-8 hover:border-purple-500 hover:bg-purple-50 transition-all group"
+                >
+                  <div className="text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-purple-400 group-hover:text-purple-500 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    <p className="mt-2 text-sm text-gray-600 group-hover:text-gray-700">
+                      {formData.resume
+                        ? `Selected: ${formData.resume.name}`
+                        : "Drop your PDF here, or click to select"}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      PDF up to 5MB
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label htmlFor="fullName" className="block text-gray-900 font-bold mb-2">
@@ -282,7 +344,8 @@ export default function ResumePortal() {
               />
             </div>
 
-            <div className="bg-purple-50 rounded-lg p-6">
+            {/* Conditional Auto Apply Section */}
+            <div className={`rounded-lg p-6 ${targetCompanyId ? 'bg-gray-100' : 'bg-purple-50'}`}>
               <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
@@ -290,61 +353,20 @@ export default function ResumePortal() {
                   name="autoApply"
                   checked={formData.autoApply}
                   onChange={handleChange}
-                  className="h-5 w-5 text-purple-600 rounded focus:ring-purple-500"
+                  disabled={!!targetCompanyId}
+                  className="h-5 w-5 text-purple-600 rounded focus:ring-purple-500 disabled:opacity-50"
                 />
-                <label htmlFor="autoApply" className="text-gray-900 font-bold">
-                  Auto Apply to Matching Jobs
+                <label htmlFor="autoApply" className={`font-bold ${targetCompanyId ? 'text-gray-500' : 'text-gray-900'}`}>
+                  {targetCompanyId ? 'Direct Application' : 'Auto Apply to Matching Jobs'}
                 </label>
               </div>
               <p className="text-gray-800 text-sm mt-2 ml-8">
-                We&apos;ll automatically submit your resume to jobs matching your profile.
+                {targetCompanyId 
+                  ? `You are applying directly to ${targetCompanyName || 'this company'}.` 
+                  : "We'll automatically submit your resume to jobs matching your profile."}
               </p>
             </div>
 
-            <div>
-              <label htmlFor="resume" className="block text-gray-900 font-bold mb-2">
-                Resume (PDF) *
-              </label>
-              <div className="relative">
-                <input
-                  type="file"
-                  id="resume"
-                  name="resume"
-                  onChange={handleChange}
-                  accept=".pdf"
-                  required
-                  className="hidden"
-                />
-                <label
-                  htmlFor="resume"
-                  className="cursor-pointer flex items-center justify-center border-2 border-dashed border-purple-300 rounded-lg p-8 hover:border-purple-500 hover:bg-purple-50 transition-all group"
-                >
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto h-12 w-12 text-purple-400 group-hover:text-purple-500 transition-colors"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    <p className="mt-2 text-sm text-gray-600 group-hover:text-gray-700">
-                      {formData.resume
-                        ? `Selected: ${formData.resume.name}`
-                        : "Drop your PDF here, or click to select"}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      PDF up to 5MB
-                    </p>
-                  </div>
-                </label>
-              </div>
-            </div>
 
             <button
               type="submit"
@@ -360,12 +382,20 @@ export default function ResumePortal() {
                   Submitting...
                 </span>
               ) : (
-                "Submit Resume"
+                targetCompanyId ? "Submit Application" : "Submit Resume"
               )}
             </button>
           </form>
         )}
       </div>
     </div>
+  );
+}
+
+export default function ResumePortal() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-purple-900 flex items-center justify-center text-white">Loading...</div>}>
+      <ResumePortalContent />
+    </Suspense>
   );
 }
