@@ -37,7 +37,7 @@ export default function JobDetailsPage() {
                     disabled
                     className="block w-full bg-green-600 text-gray-300 cursor-not-allowed text-center font-bold py-3 rounded-lg border border-gray-500"
                 >
-                    You&apos;ve Applied
+                    You Have Applied
                 </button>
             );
         }
