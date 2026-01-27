@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-// Removed unused Image import
 import { FiBriefcase } from 'react-icons/fi';
 
 const HostedJobsPage = () => {
@@ -47,7 +46,7 @@ const HostedJobsPage = () => {
       // Group items without valid dates under "Unknown Date"
       const unknownKey = 'Unknown Date';
       if (!groups[unknownKey]) {
-        groups[unknownKey] = { date: new Date(0), companies: [] }; // Use epoch for sorting
+        groups[unknownKey] = { date: new Date(0), companies: [] }; 
       }
       groups[unknownKey].companies.push(company);
     }
@@ -73,7 +72,7 @@ const HostedJobsPage = () => {
 
         {/* Jobs Grid - Grouped by Date */}
         {companies.length === 0 ? (
-          // FIXED: Changed "haven't" to "haven&apos;t" below
+          
           <div className="text-gray-500 text-center py-20">You haven&apos;t posted any jobs yet.</div>
         ) : (
           sortedGroups.map(([dateKey, groupData]) => (
