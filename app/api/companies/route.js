@@ -5,10 +5,9 @@ export async function GET() {
     try {
         const client = await clientPromise;
         const db = client.db('resumePortal');
-        const companies = await db.collection('companyData')
-        .find({}).toArray();
+        const companies = await db.collection('companyData').find({}).toArray();
         
-        // Transform data to match the expected format in CompanyCard
+        
         const transformedCompanies = companies.map(company => ({
             _id: company._id,
             name: company.company_name || company.name,
@@ -16,7 +15,10 @@ export async function GET() {
             location: company.location,
             skills: company.required_skills || company.skills || [],
             experienceLevel: company.experience_required || company.experienceLevel,
-            email: company.email || company.contact_email
+            email: company.email || company.contact_email,
+            
+            createdAt: company.createdAt,
+            postedOn: company.postedAt
         }));
 
         return NextResponse.json(transformedCompanies);

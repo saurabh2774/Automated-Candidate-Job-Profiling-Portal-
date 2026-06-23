@@ -6,10 +6,9 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react';
 
-
 const Navbar = () => {
-  
-  const {data: session} = useSession()
+  const { data: session } = useSession()
+  const userType = session?.user?.type; // "candidate" | "employer" | undefined
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -38,13 +37,6 @@ const Navbar = () => {
     return pathname === path ? 'text-purple-400' : '';
   }
 
-  // if(session){
-  //   return <>
-  //   signout in as {session.user.email}<br/>
-  //   <button onClick={() => signOut()}>Sign out</button>
-  //   </>
-  // }
-
   return (
     <nav className="w-full bg-gradient-to-b from-black to-black/95 backdrop-blur-xl border-b border-purple-500/20 text-white sticky top-0 z-20 shadow-2xl transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,18 +51,39 @@ const Navbar = () => {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex md:items-center md:space-x-2">
-            <Link href="/companies-portal" className={` px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/companies-portal')} group relative`}>
-              Companies
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/resume-portal" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/resume-portal')} group relative`}>
-              Resume Portal
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/dashboard" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/dashboard')} group relative`}>
-              Dashboard
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
-            </Link>
+            
+            {/* Candidate-Only / Guest Links */}
+            {(!userType || userType === "candidate") && (
+              <>
+                <Link href="/companies-portal" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/companies-portal')} group relative`}>
+                  Companies
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+                <Link href="/resume-portal" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/resume-portal')} group relative`}>
+                  Resume Portal
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+                <Link href="/dashboard" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/dashboard')} group relative`}>
+                  Dashboard
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+              </>
+            )}
+
+            {/* Employer-Only Links */}
+            {userType === "employer" && (
+              <>
+                <Link href="/hosted-jobs" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/hosted-jobs')} group relative`}>
+                  My Hosted
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+                <Link href="/post-company" className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-purple-500/20 hover:text-purple-300 ${isActive('/post-company')} group relative`}>
+                  Post Job
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-pink-400 group-hover:w-full transition-all duration-300"></span>
+                </Link>
+              </>
+            )}
+
           </div>
 
           {/* Auth Buttons */}
@@ -85,34 +98,40 @@ const Navbar = () => {
                   {session.user.email?.split('@')[0]}
                 </button>
               </div>
+              
               {dropdownOpen && (
                 <div className="absolute top-full right-0 mt-4 w-64 bg-gradient-to-br from-slate-950 via-slate-900/40 to-slate-950 border border-purple-500/40 rounded-2xl shadow-2xl z-30 animate-in fade-in slide-in-from-top-2 duration-300 origin-top-right backdrop-blur-xl overflow-hidden" onMouseEnter={() => handleDropdownEnter()} onMouseLeave={() => handleDropdownLeave()}>
                   {/* Header with user info */}
                   <div className="px-5 py-4 bg-gradient-to-r from-purple-900/40 to-transparent border-b border-purple-500/20">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Account</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Account ({userType || 'Guest'})</p>
                     <p className="text-sm text-gray-100 font-medium mt-1 truncate">{session.user.email}</p>
                   </div>
                   
                   {/* Menu Items */}
                   <div className="py-2">
-                    <Link href="/MyApplications" onClick={() => setDropdownOpen(false)} className="group/item flex items-center px-5 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden">
-                      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400 to-purple-600 transform origin-top scale-y-0 group-hover/item:scale-y-100 transition-transform duration-300"></div>
-                      <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                      </svg>
-                      <span className="text-sm font-medium">My Applications</span>
-                      <span className="ml-auto text-xs text-gray-500 group-hover/item:text-purple-400 transition-colors">→</span>
-                    </Link>
-                    
-                    <Link href="/hosted-jobs" onClick={() => setDropdownOpen(false)} className="group/item flex items-center px-5 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden">
-                      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400 to-purple-600 transform origin-top scale-y-0 group-hover/item:scale-y-100 transition-transform duration-300"></div>
-                      <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      <span className="text-sm font-medium">My Hosted</span>
-                      <span className="ml-auto text-xs text-gray-500 group-hover/item:text-purple-400 transition-colors">→</span>
-                    </Link>
+                    {/* Candidate-Only Dropdown Item */}
+                    {(!userType || userType === "candidate") && (
+                      <Link href="/MyApplications" onClick={() => setDropdownOpen(false)} className="group/item flex items-center px-5 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden">
+                        <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400 to-purple-600 transform origin-top scale-y-0 group-hover/item:scale-y-100 transition-transform duration-300"></div>
+                        <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <span className="text-sm font-medium">My Applications</span>
+                        <span className="ml-auto text-xs text-gray-500 group-hover/item:text-purple-400 transition-colors">→</span>
+                      </Link>
+                    )}
+                    {(!userType || userType === "employer") && (
+                      <Link href="/hosted-jobs" onClick={() => setDropdownOpen(false)} className="group/item flex items-center px-5 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden">
+                        <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400 to-purple-600 transform origin-top scale-y-0 group-hover/item:scale-y-100 transition-transform duration-300"></div>
+                        <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <span className="text-sm font-medium">My Hosted Jobs</span>
+                        <span className="ml-auto text-xs text-gray-500 group-hover/item:text-purple-400 transition-colors">→</span>
+                      </Link>
+                    )}
                   </div>
+                  
                   
                   {/* Divider */}
                   <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
@@ -162,27 +181,53 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-purple-500/20 bg-gradient-to-b from-black to-black/95 backdrop-blur-lg" id="mobile-menu">
           <div className="px-4 pt-3 pb-4 space-y-2 sm:px-3">
-            <Link 
-              href="/companies-portal" 
-              className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/companies-portal')}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Companies
-            </Link>
-            <Link 
-              href="/resume-portal" 
-              className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/resume-portal')}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Resume Portal
-            </Link>
-            <Link 
-              href="/dashboard" 
-              className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/dashboard')}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
+            
+            {/* Mobile Candidate / Guest Links */}
+            {(!userType || userType === "candidate") && (
+              <>
+                <Link 
+                  href="/companies-portal" 
+                  className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/companies-portal')}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Companies
+                </Link>
+                <Link 
+                  href="/resume-portal" 
+                  className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/resume-portal')}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Resume Portal
+                </Link>
+                <Link 
+                  href="/dashboard" 
+                  className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/dashboard')}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              </>
+            )}
+
+            {/* Mobile Employer Links */}
+            {userType === "employer" && (
+              <>
+                <Link 
+                  href="/hosted-jobs" 
+                  className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/hosted-jobs')}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Hosted
+                </Link>
+                <Link 
+                  href="/post-company" 
+                  className={`block px-4 py-3 text-base font-medium hover:bg-purple-500/20 hover:text-purple-300 rounded-lg transition-all duration-300 ${isActive('/post-company')}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Post Job
+                </Link>
+              </>
+            )}
             
             <div className="pt-4 pb-2 border-t border-purple-500/20 flex flex-col space-y-3">
               {session && <div className='flex flex-col relative'>
@@ -199,18 +244,17 @@ const Navbar = () => {
                 {dropdownOpen && (
                   <div className="bg-gradient-to-br from-slate-950 via-slate-900/40 to-slate-950 border border-purple-500/30 rounded-xl shadow-lg backdrop-blur-xl overflow-hidden mb-3">
                     <div className="py-1">
-                      <Link href="/MyApplications" className="group/item flex items-center px-4 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden" onClick={() => {setIsMenuOpen(false); setDropdownOpen(false);}}>
-                        <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                        </svg>
-                        <span className="text-sm font-medium">My Applications</span>
-                      </Link>
-                      <Link href="/hosted-jobs" className="group/item flex items-center px-4 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden" onClick={() => {setIsMenuOpen(false); setDropdownOpen(false);}}>
-                        <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span className="text-sm font-medium">My Hosted</span>
-                      </Link>
+                      
+                      {/* Mobile Candidate Dropdown */}
+                      {(!userType || userType === "candidate") && (
+                        <Link href="/MyApplications" className="group/item flex items-center px-4 py-3 text-gray-200 hover:text-purple-300 transition-all duration-200 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-transparent relative overflow-hidden" onClick={() => {setIsMenuOpen(false); setDropdownOpen(false);}}>
+                          <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          </svg>
+                          <span className="text-sm font-medium">My Applications</span>
+                        </Link>
+                      )}
+
                       <div className="h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
                       <button onClick={() => {signOut(); setIsMenuOpen(false); setDropdownOpen(false);}} className="group/item w-full flex items-center px-4 py-3 text-gray-200 hover:text-red-300 transition-all duration-200 hover:bg-gradient-to-r hover:from-red-600/20 hover:to-transparent relative overflow-hidden">
                         <svg className="w-4 h-4 mr-3 flex-shrink-0 opacity-70 group-hover/item:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">

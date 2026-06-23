@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-// Ensure this import points to the file we fixed in Step 1
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
@@ -35,7 +34,8 @@ export async function GET(req) {
 
       const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
       const registeredOn = app.sentAt ? new Date(app.sentAt).toLocaleDateString('en-US', dateOptions) : 'N/A';
-      const displayScore = app.suitabilityScore ? Math.round(app.suitabilityScore * 100) : 0;
+      let displayScore = app.suitabilityScore ? Math.round(app.suitabilityScore * 100) : 0;
+      displayScore = Math.max(0, Math.min(99, displayScore));
 
       let visualClass = 'B';
       if (app.classification === 'MOS') visualClass = 'A';

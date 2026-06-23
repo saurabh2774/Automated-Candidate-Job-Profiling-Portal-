@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-// This is the URL for your Python AI Service
-const AI_SERVICE_URL = "jobhunt-ai-service-production.up.railway.app";
+// const AI_SERVICE_URL = "jobhunt-ai-service-production.up.railway.app";
+const AI_SERVICE_URL = "http://localhost:8000";
 
 export async function POST(req) {
     try {
@@ -19,7 +19,6 @@ export async function POST(req) {
         const client = await clientPromise;
         const db = client.db("resumePortal");
 
-        // 1. Check for specific target company
         const targetCompanyId = formData.get('targetCompanyId');
 
         const application = {

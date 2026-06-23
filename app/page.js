@@ -1,90 +1,107 @@
 "use client"
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 const HomePage = () => {
-
+  const { data: session } = useSession();
+  const userType = session?.user?.type; // 'candidate' | 'employer' | undefined
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="py-20 px-4 text-center">
-        <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500 mb-6">
-          Find Your Dream Job Today
-        </h1>
-        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-          Upload your resume and let our Algorithm match you with the perfect opportunities. Smart job hunting made simple.
-        </p>
-        <Link 
-          href="/resume-portal" 
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors"
-        >
-          Upload Your Resume
-        </Link>
-      </section>
+      
+      {/* CANDIDATE / GUEST VIEW */}
+      {(!userType || userType === 'candidate') && (
+        <>
+          {/* Hero Section */}
+          <section className="py-20 px-4 text-center">
+            <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500 mb-6">
+              Find Your Dream Job Today
+            </h1>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Upload your resume and let our Algorithm match you with the perfect opportunities. Smart job hunting made simple.
+            </p>
+            <Link 
+              href="/resume-portal" 
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-block"
+            >
+              Upload Your Resume
+            </Link>
+          </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-gray-900">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12 text-white">How It Works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="p-6 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
-                <div className="text-purple-500 text-3xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold mb-2 text-white">{feature.title}</h3>
-                <p className="text-gray-400">{feature.description}</p>
+          {/* Features Section */}
+          <section className="py-20 px-4 bg-gray-900">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-4xl font-bold text-center mb-12 text-white">How It Works</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                {features.map((feature, index) => (
+                  <div key={index} className="p-6 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors">
+                    <div className="text-purple-500 text-3xl mb-4">{feature.icon}</div>
+                    <h3 className="text-xl font-semibold mb-2 text-white">{feature.title}</h3>
+                    <p className="text-gray-400">{feature.description}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
+          </section>
 
-      {/* Host A Job Section */}
-      <section className="py-20 px-4 bg-gray-900">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12 text-white">Host  A  Job</h2>
-          <p className="text-xl text-gray-400 text-center mb-12 max-w-3xl mx-auto">
-            Ready to find the perfect candidate? Follow these simple steps to post your job and connect with talented professionals.
-          </p>
-          <div className="grid md:grid-cols-3 gap-8">
-            {hostingSteps.map((step, index) => (
-              <div key={index} className="p-6 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors relative">
-                <div className="absolute -top-4 -left-4 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  {index + 1}
-                </div>
-                <div className="text-purple-500 text-4xl mb-4 mt-2">{step.icon}</div>
-                <h3 className="text-xl font-semibold mb-2 text-white">{step.title}</h3>
-                <p className="text-gray-400">{step.description}</p>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-12">
+          {/* CTA Section */}
+          <section className="py-20 px-4 bg-gray-900 border-t border-purple-500/20">
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-4xl font-bold mb-6 text-white">Ready to Start Your Journey?</h2>
+              <p className="text-xl text-gray-400 mb-8">
+                Join Today AND Found Your Perfectly Matched Job Through Our Platform.
+              </p>
+              <Link 
+                href={session ? "/resume-portal" : "/login"} 
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-block"
+              >
+                {session ? "Get Started" : "Get Started For Free"}
+              </Link>
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* EMPLOYER VIEW */}
+      {userType === 'employer' && (
+        <>
+          <section className="py-20 px-4 text-center">
+            <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500 mb-6">
+              Find The Perfect Candidate
+            </h1>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Post your open roles and let our Smart Matching Algorithm connect you with top-tier talent instantly.
+            </p>
             <Link 
               href="/post-company" 
               className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-block"
             >
               Start Posting Jobs
             </Link>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-gray-900">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6 text-white">Ready to Start Your Journey?</h2>
-          <p className="text-xl text-gray-400 mb-8">
-            Join Today AND Found Your Perfectly Matched Job Through Our Platform.
-          </p>
-          <Link 
-            href="/resume-portal" 
-            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-block"
-          >
-            Get Started For Free
-          </Link>
-        </div>
-      </section>
+          {/* Host A Job Section */}
+          <section className="py-20 px-4 bg-gray-900 border-t border-purple-500/20">
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-4xl font-bold text-center mb-12 text-white">How To Host A Job</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                {hostingSteps.map((step, index) => (
+                  <div key={index} className="p-6 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors relative">
+                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {index + 1}
+                    </div>
+                    <div className="text-purple-500 text-4xl mb-4 mt-2">{step.icon}</div>
+                    <h3 className="text-xl font-semibold mb-2 text-white">{step.title}</h3>
+                    <p className="text-gray-400">{step.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   )
 }
@@ -110,20 +127,19 @@ const features = [
 const hostingSteps = [
   {
     icon: "🏢",
-    title: "Go to Companies",
-    description: "Navigate to the companies section to access job posting features."
+    title: "Go to Post Job",
+    description: "Navigate to the 'Post Job' section in your navigation bar to start."
   },
   {
     icon: "📋",
-    title: "Click Post a Job",
-    description: "Click on the 'Post a Job' button to start creating your job listing."
+    title: "Fill Details",
+    description: "Complete the job posting form with the role, description, and required skills."
   },
   {
-    icon: "✍️",
-    title: "Fill & Submit Form",
-    description: "Complete the job posting form with all required details and submit to host your job."
+    icon: "🚀",
+    title: "Publish & Match",
+    description: "Submit to host your job and watch our AI match you with the perfect candidates."
   }
 ]
-
 
 export default HomePage

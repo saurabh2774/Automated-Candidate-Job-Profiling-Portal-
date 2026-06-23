@@ -13,15 +13,16 @@ export async function GET(req, { params }) {
     // 1. Get all matches for this company
     const matches = await db.collection("matchedApplications")
       .find({ companyId: new ObjectId(id) })
-      .sort({ suitabilityScore: -1 }) // Show highest score first
+      .sort({ suitabilityScore: -1 }) 
       .toArray();
 
     // 2. Enrich with data from the original 'applications' collection (to get resumeId and email)
     const applicants = await Promise.all(matches.map(async (match) => {
         const applicationData = await db.collection("applications").findOne({ _id: match.applicationId });
         
-        // Calculate display score
-        const displayScore = match.suitabilityScore ? Math.round(match.suitabilityScore * 100) : 0;
+        // Calculate display score (clamped to 0-99)
+        let displayScore = match.suitabilityScore ? Math.round(match.suitabilityScore * 100) : 0;
+        displayScore = Math.max(0, Math.min(99, displayScore));
         
         let visualClass = 'B';
         if (match.classification === 'MOS') visualClass = 'A';
