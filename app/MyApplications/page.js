@@ -158,7 +158,6 @@ const MyApplicationsPage = () => {
               {/* Applications for this date */}
               <div className="grid grid-cols-1 gap-6">
                 {groupData.apps.map((app) => (
-                  // UPDATED: Linking to the companies-portal route as requested
                   <Link key={app.id} href={`/companies-portal/${app.companyId}`} className="block group ">
                     <div className=" bg-gradient-to-br from-slate-900/80 to-slate-900/40 rounded-2xl shadow-lg border border-purple-500/20 p-6 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 relative overflow-hidden h-full">
                       {/* Background Gradient Accent */}
@@ -230,19 +229,30 @@ const MyApplicationsPage = () => {
                         {/* Left: Sustainability */}
                         <div className="flex items-center gap-4">
                           {/* Sustainability Badge */}
-                          <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2.5 rounded-lg border border-emerald-500/30">
+                          <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2.5 rounded-lg border border-gray-700">
                             <div
-                              className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-white text-sm ${app.sustainability?.class === 'A'
-                                  ? 'bg-gradient-to-br from-emerald-500 to-green-600'
-                                  : 'bg-gradient-to-br from-lime-500 to-green-600'
-                                }`}
+                              className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-white text-sm ${
+                                app.sustainability?.class === 'A' ? 'bg-gradient-to-br from-emerald-500 to-green-600' :
+                                app.sustainability?.class === 'B' ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                                'bg-gradient-to-br from-red-500 to-rose-600' // Handles C, D, or 0 scores dynamically
+                              }`}
                             >
-                              {app.sustainability?.class || 'B'}
+                              {app.sustainability?.class || 'C'}
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-xs text-emerald-400 uppercase font-bold tracking-wider">Sustainability</span>
-                              <span className="text-xs text-emerald-300 font-semibold">
-                                Score: {app.sustainability?.score || 'N/A'}/100
+                              <span className={`text-xs uppercase font-bold tracking-wider ${
+                                app.sustainability?.class === 'A' ? 'text-emerald-400' :
+                                app.sustainability?.class === 'B' ? 'text-yellow-400' :
+                                'text-red-400'
+                              }`}>
+                                Sustainability
+                              </span>
+                              <span className={`text-xs font-semibold ${
+                                app.sustainability?.class === 'A' ? 'text-emerald-300' :
+                                app.sustainability?.class === 'B' ? 'text-yellow-300' :
+                                'text-red-300'
+                              }`}>
+                                Score: {app.sustainability?.score || '0'}/100
                               </span>
                             </div>
                           </div>

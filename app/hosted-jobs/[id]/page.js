@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, use } from 'react'; // 1. Import 'use'
+import React, { useState, useEffect, use } from 'react';
 import { FiDownload, FiMail, FiUser } from 'react-icons/fi';
 
 const JobApplicantsPage = ({ params }) => {
-  // 2. Unwrap the params promise using React.use()
+  // Unwrap the params promise using React.use()
   const { id } = use(params);
 
   const [applicants, setApplicants] = useState([]);
@@ -13,7 +13,6 @@ const JobApplicantsPage = ({ params }) => {
   useEffect(() => {
     const fetchApplicants = async () => {
       try {
-        // 3. Use 'id' directly instead of 'params.id'
         const res = await fetch(`/api/job-applicants/${id}`);
         const data = await res.json();
         if (data.success) {
@@ -30,7 +29,14 @@ const JobApplicantsPage = ({ params }) => {
     if (id) {
         fetchApplicants();
     }
-  }, [id]); // 4. Depend on 'id'
+  }, [id]);
+
+  // Helper function to assign classes/text dynamically based on the score
+  const getMatchDetails = (score) => {
+    if (score >= 70) return { text: 'High Match', textClass: 'text-emerald-400', bgClass: 'bg-emerald-500', badgeClass: 'bg-emerald-500/20 border-emerald-500 text-emerald-400' };
+    if (score >= 40) return { text: 'Medium Match', textClass: 'text-yellow-400', bgClass: 'bg-yellow-500', badgeClass: 'bg-yellow-500/20 border-yellow-500 text-yellow-400' };
+    return { text: 'Low Match', textClass: 'text-red-400', bgClass: 'bg-red-500', badgeClass: 'bg-red-500/20 border-red-500 text-red-400' };
+  };
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading Applicants...</div>;
 
@@ -48,14 +54,16 @@ const JobApplicantsPage = ({ params }) => {
           {applicants.length === 0 ? (
             <div className="col-span-3 text-center text-gray-500 py-20">No applicants found for this job yet.</div>
           ) : (
-            applicants.map((app) => (
+            applicants.map((app) => {
+              // Calculate details once per applicant
+              const match = getMatchDetails(app.score);
+
+              return (
               <div key={app.id} className="bg-slate-900/60 rounded-xl border border-gray-700 hover:border-emerald-500/50 transition-all p-6 flex flex-col relative overflow-hidden group">
                 
                 {/* Score Badge */}
                 <div className="absolute top-4 right-4">
-                  <div className={`flex flex-col items-center justify-center w-12 h-12 rounded-full border ${
-                    app.visualClass === 'A' ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                  }`}>
+                  <div className={`flex flex-col items-center justify-center w-12 h-12 rounded-full border ${match.badgeClass}`}>
                     <span className="font-bold text-sm">{app.score}</span>
                   </div>
                 </div>
@@ -81,13 +89,13 @@ const JobApplicantsPage = ({ params }) => {
                 <div className="mb-6">
                     <div className="flex justify-between items-end mb-1">
                         <span className="text-xs uppercase font-bold text-gray-500 tracking-wider">Sustainability</span>
-                        <span className={`text-sm font-bold ${app.visualClass === 'A' ? 'text-emerald-400' : 'text-yellow-400'}`}>
-                            {app.visualClass === 'A' ? 'High Match' : 'Medium Match'}
+                        <span className={`text-sm font-bold ${match.textClass}`}>
+                            {match.text}
                         </span>
                     </div>
                     <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
                         <div 
-                            className={`h-full ${app.visualClass === 'A' ? 'bg-emerald-500' : 'bg-yellow-500'}`} 
+                            className={`h-full ${match.bgClass}`} 
                             style={{ width: `${app.score}%` }}
                         ></div>
                     </div>
@@ -104,7 +112,7 @@ const JobApplicantsPage = ({ params }) => {
                     </a>
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
       </div>
